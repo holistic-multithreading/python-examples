@@ -34,7 +34,7 @@ runner = Runner()
 
 for tc in thread_counts:
     for v in values:
-        runner.bench_func('/'.join(['MultithreadSum', str(v), str(tc)]), multithread_sum, 1, v, tc)
+        runner.bench_func('/'.join(['MultithreadSum', f'{v:,}', str(tc)]), multithread_sum, 1, v, tc)
 
 for v in values:
-    runner.bench_func('SingleThreadSum', singlethread_sum, 1, v)
+    runner.bench_func('/'.join(['SingleThreadSum', f'{v:,}']), singlethread_sum, 1, v)
