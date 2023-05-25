@@ -32,9 +32,9 @@ values = [1_000, 1_000_000, 1_000_000_000]
 thread_counts = [2, 4, 8, 10, 12]
 runner = Runner()
 
+for v in values:
+    runner.bench_func('/'.join(['SingleThreadSum', f'{v:,}']), singlethread_sum, 1, v)
+
 for tc in thread_counts:
     for v in values:
         runner.bench_func('/'.join(['MultithreadSum', f'{v:,}', str(tc)]), multithread_sum, 1, v, tc)
-
-for v in values:
-    runner.bench_func('/'.join(['SingleThreadSum', f'{v:,}']), singlethread_sum, 1, v)
