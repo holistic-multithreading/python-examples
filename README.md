@@ -2,22 +2,14 @@
 Python code samples for Holistic Multithreading book
 
 # How to run these benchmarks
-1. Install python and pip.
-1. Create virtual environment:
+1. Install pipenv:
     ```shell
-    python3 -m venv <my-virtual-env>
-    ```
-1. Activate your virtual environment (differs based on your shell):
-    ```shell
-    source <my-virtual-env>/bin/activate
-    ```
-1. Install `pyperf` package into your virtual environment:
-    ```shell
-    pip install pyperf
+    pip install pipenv
     ```
 1. Clone git repo and run the benchmarks:
     ```shell
     git clone git@github.com:holistic-multithreading/python-examples.git
     cd python-examples
-    python sum_ints.py
+    pipenv install
+    pipenv run python sum_ints.py
     ```
