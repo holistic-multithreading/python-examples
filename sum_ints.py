@@ -1,4 +1,5 @@
 from threading import Thread
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import google_benchmark
 from multiprocessing import cpu_count
 from math import log2, exp2, ceil
@@ -33,11 +34,32 @@ def multithread_sum(lo, hi, thread_count):
 
     return sum([r[0] for r in results])
 
+def executor_sum(lo, hi, thread_count):
+    sum = 0
+    with ThreadPoolExecutor(max_workers=thread_count) as executor:
+        futures = [executor.submit(singlethread_sum, r[0], r[1]) for r in intervals(lo, hi, thread_count)]
+        for future in as_completed(futures):
+            try:
+                sum = sum + future.result()
+            except Exception as ex:
+                print('Exception computing sum of integers: %s' % ex)
+    return sum
+
+def process_pool_executor_sum(lo, hi, thread_count):
+    sum = 0
+    with ProcessPoolExecutor(max_workers=thread_count) as executor:
+        futures = [executor.submit(singlethread_sum, r[0], r[1]) for r in intervals(lo, hi, thread_count)]
+        for future in as_completed(futures):
+            try:
+                sum = sum + future.result()
+            except Exception as ex:
+                print('Exception computing sum of integers: %s' % ex)
+    return sum
+
 @google_benchmark.register
 @google_benchmark.option.range_multiplier(1_000)
 @google_benchmark.option.range(1_000, 1_000_000_000)
 @google_benchmark.option.use_real_time()
-@google_benchmark.option.unit(google_benchmark.kMillisecond)
 def bm_single_thread_sum(state):
     while state:
        singlethread_sum(1, state.range(0)) 
@@ -46,10 +68,25 @@ def bm_single_thread_sum(state):
 @google_benchmark.option.args_product([[1_000, 1_000_000, 1_000_000_000], thread_counts()])
 @google_benchmark.option.measure_process_cpu_time()
 @google_benchmark.option.use_real_time()
-@google_benchmark.option.unit(google_benchmark.kMillisecond)
 def bm_multithreaded_sum(state):
     while state:
        multithread_sum(1, state.range(0), state.range(1)) 
+
+@google_benchmark.register
+@google_benchmark.option.args_product([[1_000, 1_000_000, 1_000_000_000], thread_counts()])
+@google_benchmark.option.measure_process_cpu_time()
+@google_benchmark.option.use_real_time()
+def bm_thread_pool_executor_sum(state):
+    while state:
+       executor_sum(1, state.range(0), state.range(1)) 
+
+@google_benchmark.register
+@google_benchmark.option.args_product([[1_000, 1_000_000, 1_000_000_000], thread_counts()])
+@google_benchmark.option.measure_process_cpu_time()
+@google_benchmark.option.use_real_time()
+def bm_process_pool_executor_sum(state):
+    while state:
+       process_pool_executor_sum(1, state.range(0), state.range(1)) 
 
 if __name__ == "__main__":
     google_benchmark.main()

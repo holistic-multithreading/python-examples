@@ -27,6 +27,18 @@ class TestSumInts(unittest.TestCase):
         self.assertEqual(sum_ints.multithread_sum(1, 100, 8), 450)
         self.assertEqual(sum_ints.multithread_sum(1, 100, 10), 450)
 
+    def test_executor_sum(self):
+        self.assertEqual(sum_ints.executor_sum(1, 10, 2), 45)
+        self.assertEqual(sum_ints.executor_sum(1, 15, 4), 60)
+        self.assertEqual(sum_ints.executor_sum(1, 100, 8), 450)
+        self.assertEqual(sum_ints.executor_sum(1, 100, 10), 450)
+
+    def test_process_pool_executor_sum(self):
+        self.assertEqual(sum_ints.process_pool_executor_sum(1, 10, 2), 45)
+        self.assertEqual(sum_ints.process_pool_executor_sum(1, 15, 4), 60)
+        self.assertEqual(sum_ints.process_pool_executor_sum(1, 100, 8), 450)
+        self.assertEqual(sum_ints.process_pool_executor_sum(1, 100, 10), 450)
+
     def test_intervals(self):
         self.assertEqual(sum_ints.intervals(1, 100, 10), [(1, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 60), (61, 70), (71, 80), (81, 90), (91, 100)])
 
