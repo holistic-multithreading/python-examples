@@ -1,5 +1,5 @@
 from threading import Thread
-from pyperf import Runner
+import google_benchmark
 from multiprocessing import cpu_count
 from math import log2, exp2, ceil
 
@@ -9,9 +9,12 @@ def thread_counts(cpu_number=cpu_count()):
 def benchmark_name(base_name, value, thread_count=None):
     return '/'.join(filter(None, [base_name, f'{value:,}', str(thread_count or '')]))
 
+def intervals(lo, hi, thread_count):
+    batch_size = (hi - lo + 1) // thread_count
+    return [(lo + i*batch_size, lo + (i+1) * batch_size - 1 if i < thread_count - 1 else hi) for i in range(thread_count)]
+
 def sum_values(lo, hi, result):
-    for i in range(lo, hi + 1):
-        result[0] += i % 10
+    result[0] = sum(i % 10 for i in range(lo, hi + 1))
 
 def singlethread_sum(lo, hi):
     result = [0]
@@ -19,30 +22,34 @@ def singlethread_sum(lo, hi):
     return result[0]
 
 def multithread_sum(lo, hi, thread_count):
-    batch_size = (hi - lo + 1) // thread_count
-    threads = []
-    results = []
-    start = lo
-    for i in range(thread_count):
-        end = start + batch_size - 1 if i < thread_count - 1 else hi
-        results.append([0])
-        threads.append(Thread(target=sum_values, args=[start, end, results[i]]))
-        threads[i].start()
-        start = end + 1
+    results = [[0] for i in range(thread_count)]
+    threads = [Thread(target=sum_values, args=[r[0], r[1], results[i]]) for i, r in enumerate(intervals(lo, hi, thread_count))]
 
-    sum = 0
-    for i, thread in enumerate(threads):
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
         thread.join()
-        sum += results[i][0]
-    return sum
+
+    return sum([r[0] for r in results])
+
+@google_benchmark.register
+@google_benchmark.option.range_multiplier(1_000)
+@google_benchmark.option.range(1_000, 1_000_000_000)
+@google_benchmark.option.use_real_time()
+@google_benchmark.option.unit(google_benchmark.kMillisecond)
+def bm_single_thread_sum(state):
+    while state:
+       singlethread_sum(1, state.range(0)) 
+
+@google_benchmark.register
+@google_benchmark.option.args_product([[1_000, 1_000_000, 1_000_000_000], thread_counts()])
+@google_benchmark.option.measure_process_cpu_time()
+@google_benchmark.option.use_real_time()
+@google_benchmark.option.unit(google_benchmark.kMillisecond)
+def bm_multithreaded_sum(state):
+    while state:
+       multithread_sum(1, state.range(0), state.range(1)) 
 
 if __name__ == "__main__":
-    values = [1_000, 1_000_000, 1_000_000_000]
-    runner = Runner()
-
-    for v in values:
-        runner.bench_func(benchmark_name('SingleThreadSum', v), singlethread_sum, 1, v)
-
-    for tc in thread_counts():
-        for v in values:
-            runner.bench_func(benchmark_name('MultithreadSum', v, tc), multithread_sum, 1, v, tc)
+    google_benchmark.main()
