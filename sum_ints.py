@@ -23,7 +23,7 @@ def singlethread_sum(lo, hi):
     return result[0]
 
 def multithread_sum(lo, hi, thread_count):
-    results = [[0] for i in range(thread_count)]
+    results = [[0] for _ in range(thread_count)]
     threads = [Thread(target=sum_values, args=[r[0], r[1], results[i]]) for i, r in enumerate(intervals(lo, hi, thread_count))]
 
     for thread in threads:
