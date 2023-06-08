@@ -8,9 +8,6 @@ from math import log2, exp2, ceil
 def thread_counts(cpu_number=cpu_count()):
     return [ceil(exp2(i)) if exp2(i) <= cpu_number else cpu_number for i in range(1, ceil(log2(cpu_number)) + 1)]
 
-def benchmark_name(base_name, value, thread_count=None):
-    return '/'.join(filter(None, [base_name, f'{value:,}', str(thread_count or '')]))
-
 def intervals(lo, hi, thread_count):
     batch_size = (hi - lo + 1) // thread_count
     return [(lo + i*batch_size, lo + (i+1) * batch_size - 1 if i < thread_count - 1 else hi) for i in range(thread_count)]

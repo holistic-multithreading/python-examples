@@ -12,10 +12,6 @@ class TestSumInts(unittest.TestCase):
         self.assertEqual(sum_ints.thread_counts(15), [2, 4, 8, 15])
         self.assertEqual(sum_ints.thread_counts(16), [2, 4, 8, 16])
 
-    def test_benchmark_name(self):
-        self.assertEqual(sum_ints.benchmark_name('BaseName', 1_000), 'BaseName/1,000')
-        self.assertEqual(sum_ints.benchmark_name('BaseName', 1_000, 10), 'BaseName/1,000/10')
-
     def test_single_thread_sum(self):
         self.assertEqual(sum_ints.singlethread_sum(1, 10), 45)
         self.assertEqual(sum_ints.singlethread_sum(1, 15), 60)
