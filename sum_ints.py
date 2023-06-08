@@ -1,3 +1,4 @@
+import asyncio
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
 import google_benchmark
@@ -56,6 +57,19 @@ def process_pool_executor_sum(lo, hi, thread_count):
                 print('Exception computing sum of integers: %s' % ex)
     return sum
 
+def task_group_sum(lo, hi, thread_count):
+    async def async_sum(lo, hi):
+        return singlethread_sum(lo, hi)
+
+    async def main():
+        tasks = []
+        async with asyncio.TaskGroup() as task_group:
+            tasks = [task_group.create_task(async_sum(r[0], r[1])) for r in intervals(lo, hi, thread_count)]
+
+        return sum([task.result() for task in tasks])
+
+    return asyncio.run(main())
+
 @google_benchmark.register
 @google_benchmark.option.range_multiplier(1_000)
 @google_benchmark.option.range(1_000, 1_000_000_000)
@@ -87,6 +101,14 @@ def bm_thread_pool_executor_sum(state):
 def bm_process_pool_executor_sum(state):
     while state:
        process_pool_executor_sum(1, state.range(0), state.range(1)) 
+
+@google_benchmark.register
+@google_benchmark.option.args_product([[1_000, 1_000_000, 1_000_000_000], thread_counts()])
+@google_benchmark.option.measure_process_cpu_time()
+@google_benchmark.option.use_real_time()
+def bm_task_group_sum(state):
+    while state:
+       task_group_sum(1, state.range(0), state.range(1)) 
 
 if __name__ == "__main__":
     google_benchmark.main()
